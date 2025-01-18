@@ -43,7 +43,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <MainNav></MainNav>
             {children}
           </ThemeProvider>
         </body>
