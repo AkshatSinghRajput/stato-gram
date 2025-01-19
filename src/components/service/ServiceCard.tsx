@@ -1,14 +1,11 @@
 "use client";
 
+import { serviceType } from "@/types/service.types";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-
-type ServiceType = {
-  id: string;
-  title: string;
-  status: string;
-  description: string;
-};
+import { Card } from "../ui/card";
+import { DeleteServiceModal } from "./DeleteService";
+import Link from "next/link";
 
 function ServiceBadge({ status }: { status: string }) {
   return (
@@ -26,30 +23,30 @@ function ServiceBadge({ status }: { status: string }) {
   );
 }
 
-export default function ServiceCard(service: ServiceType) {
+export default function ServiceCard(service: serviceType) {
   return (
-    <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-neutral-900 border border-zinc-700 rounded-lg">
+    <Card className="relative flex flex-col md:flex-row items-start md:items-center justify-between p-4 ">
       <div className="absolute -top-4 -right-0">
-        <ServiceBadge status={service.status} />
+        <ServiceBadge status={service.service_status} />
       </div>
       <div className="flex flex-col gap-2 w-full pb-2">
-        <h2 className="text-lg font-bold">{service.title}</h2>
-        <p className="text-sm text-zinc-400">{service.description}</p>
+        <h2 className="text-lg font-bold">{service.service_name}</h2>
+        <p className="text-sm text-zinc-400">{service.service_description}</p>
       </div>
       <div className="flex items-center gap-4">
-        <Button
-          asChild
-          className="w-full md:w-auto bg-indigo-500 hover:bg-indigo-600 text-white border-0 cursor-pointer"
-        >
-          <span className="flex items-center gap-2">Edit</span>
-        </Button>
-        <Button
-          asChild
-          className="w-full md:w-auto bg-red-500 hover:bg-red-600 text-white border-0 cursor-pointer"
-        >
-          <span className="flex items-center gap-2">Delete</span>
-        </Button>
+        <Link href={`/dashboard/services/edit/${service?.service_id}`}>
+          <Button
+            className="w-full md:w-auto cursor-pointer border-zinc-700"
+            variant="secondary"
+          >
+            Edit
+          </Button>
+        </Link>
+
+        <DeleteServiceModal
+          service_id={service?.service_id}
+        ></DeleteServiceModal>
       </div>
-    </div>
+    </Card>
   );
 }

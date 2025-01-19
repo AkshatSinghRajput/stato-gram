@@ -41,7 +41,7 @@ export function AppSidebar() {
   }, [organization]);
 
   return (
-    <Sidebar>
+    <Sidebar className="bg-zinc-900">
       <SidebarHeader>
         <OrganizationSwitcher />
       </SidebarHeader>

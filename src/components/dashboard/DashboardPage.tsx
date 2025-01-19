@@ -18,22 +18,18 @@ export default function DashboardComponent() {
   const { organization } = useOrganization();
   return (
     <div className="flex flex-col items-center mt-4 h-[calc(100vh-4rem)] px-4">
-      <Card className="w-full max-w-full border bg-gradient-to-b from-zinc-900 to-black text-white border-zinc-700">
+      <Card className="w-full max-w-full border  text-white border-zinc-700">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold text-white">
             Welcome to your {organization?.name} dashboard
           </CardTitle>
           <CardDescription className="text-zinc-400">
             Access the issues and services of your organization and see the
-            public page.
+            public page. You can manage your organization's incidents and
+            services from here and see the public page of your organization.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-zinc-300 mb-4">
-            You can manage your organization's incidents and services from here
-            and see the public page of your organization.
-          </p>
-        </CardContent>
+
         <CardFooter className="flex flex-col sm:flex-row gap-4">
           <Button
             asChild

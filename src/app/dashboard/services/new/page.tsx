@@ -1,7 +1,8 @@
+import CreateServiceForm from "@/components/service/CreateService";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-export default async function IncidentPage() {
+export default async function NewServicePage() {
   const user = await auth();
   if (!user) {
     redirect("/sign-in");
@@ -10,9 +11,8 @@ export default async function IncidentPage() {
     redirect("/dashboard");
   }
   return (
-    <div>
-      <h1>Incidents</h1>
-      <p>Incidents are listed here.</p>
+    <div className="flex flex-col items-center justify-center h-screen">
+      <CreateServiceForm />
     </div>
   );
 }
