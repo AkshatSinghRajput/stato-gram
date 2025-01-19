@@ -1,4 +1,10 @@
 import MainNav from "@/components/navbar/Navbar";
+import { AppSidebar } from "@/components/sidebar/Sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function DashboardLayout({
   children,
@@ -6,9 +12,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <MainNav></MainNav>
-      <div className="h-screen p-2">{children}</div>
-    </>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <main>
+          <MainNav />
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

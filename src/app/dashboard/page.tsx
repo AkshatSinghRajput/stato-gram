@@ -1,8 +1,10 @@
-export default function DashboardPage() {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome to the dashboard</p>
-    </div>
-  );
+import Dashboard from "@/components/dashboard/Dashboard";
+import { auth } from "@clerk/nextjs/server";
+
+export default async function DashboardPage() {
+  const user = await auth();
+  if (!user?.getToken()) {
+    return null;
+  }
+  return <Dashboard />;
 }

@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import ThemeProvider from "@/components/providers/ThemeProvider";
-import MainNav from "@/components/navbar/Navbar";
 import { dark } from "@clerk/themes";
 
 const geistSans = localFont({

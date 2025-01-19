@@ -51,8 +51,18 @@ export async function POST(req: Request) {
   // For this guide, log payload to console
   const eventType = evt.type;
   if (eventType === "user.created") {
-    console.log("userId:", evt.data.id);
+    console.log("userId:", evt.data);
+  }
+  if (eventType === "user.updated") {
+    console.log("userId:", evt.data);
+  }
+  if (eventType === "organizationInvitation.accepted") {
+    console.log("organizationId:", evt.data);
   }
 
   return new Response("Webhook received", { status: 200 });
+}
+
+export async function GET() {
+  return new Response("Webhook route", { status: 200 });
 }
