@@ -39,7 +39,8 @@ const serviceSchema = z.object({
         status === "Operational" ||
         status === "Degraded Performance" ||
         status === "Partial Outage" ||
-        status === "Major Outage"
+        status === "Major Outage" ||
+        status === "Under Maintenance"
       );
     },
     { message: "Select a status" }
@@ -80,8 +81,8 @@ export default function EditServiceForm({ service }: { service: serviceType }) {
       });
       if (response.success) {
         toast({
-          title: "Service created",
-          description: "Your service has been created successfully",
+          title: "Service Updated",
+          description: "Your service has been updated successfully",
         });
         router.push("/dashboard/services");
       } else {
@@ -157,6 +158,7 @@ export default function EditServiceForm({ service }: { service: serviceType }) {
                 </option>
                 <option value="Partial Outage">Partial Outage</option>
                 <option value="Major Outage">Major Outage</option>
+                <option value="Under Maintenance">Under Maintenance</option>
               </select>
               {errors.status && (
                 <p className="text-sm text-red-500">{errors.status.message}</p>

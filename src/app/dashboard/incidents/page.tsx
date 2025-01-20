@@ -1,3 +1,5 @@
+import IncidentDashboard from "@/components/incidents/IncidentDashboard";
+import { getAllIncidents } from "@/server/actions/incident/incident.actions";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -9,10 +11,10 @@ export default async function IncidentPage() {
   if (!user.orgId) {
     redirect("/dashboard");
   }
-  return (
-    <div>
-      <h1>Incidents</h1>
-      <p>Incidents are listed here.</p>
-    </div>
-  );
+
+  const incidents = await getAllIncidents({ organization_id: user.orgId });
+  if (!incidents.success || !incidents?.incidents) {
+    redirect("/dashboard");
+  }
+  return <IncidentDashboard incidents={incidents.incidents} />;
 }

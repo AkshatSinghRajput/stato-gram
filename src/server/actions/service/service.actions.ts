@@ -114,7 +114,7 @@ export async function getServiceById(
   }
 }
 
-// Update service details
+// Update service details in the database
 export async function updateServiceAction({
   service_id,
   organization_id,
@@ -151,6 +151,48 @@ export async function updateServiceAction({
   } catch (err) {
     console.error("Error updating service: ", err);
     return { success: false, message: "Error updating service" };
+  }
+}
+
+// Update the status of multiple services at once
+export async function updateServiceStatusAction({
+  services,
+}: {
+  services: { service_id: string; status: string }[];
+}): Promise<{ success: boolean; message: string }> {
+  try {
+    await dbConnect();
+    // Verify user authentication
+    const user = await auth();
+    if (!user) {
+      return { success: false, message: "User not authenticated" };
+    }
+
+    // Create bulk operations array
+    const bulkOperations = services.map((service) => ({
+      updateOne: {
+        filter: {
+          service_id: service.service_id,
+          organization_id: user?.orgId,
+        },
+        update: {
+          service_status: service.status,
+        },
+      },
+    }));
+
+    // Execute bulk update
+    const result = await serviceModel.bulkWrite(bulkOperations);
+
+    if (result.modifiedCount === 0) {
+      return { success: false, message: "No services were updated" };
+    }
+
+    revalidatePath("/dashboard/services");
+    return { success: true, message: "Services updated successfully" };
+  } catch (err) {
+    console.error("Error updating services: ", err);
+    return { success: false, message: "Error updating services" };
   }
 }
 

@@ -1,5 +1,11 @@
 "use client";
-import { Home, BadgeAlert, Cog } from "lucide-react";
+import {
+  Home,
+  BadgeAlert,
+  Cog,
+  CalendarSyncIcon,
+  BadgeCheckIcon,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -13,6 +19,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { OrganizationSwitcher, useOrganization } from "@clerk/nextjs";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,6 +30,11 @@ const items = [
     title: "Incidents",
     url: "/dashboard/incidents",
     icon: BadgeAlert,
+  },
+  {
+    title: "Maintenance",
+    url: "/dashboard/maintenance",
+    icon: CalendarSyncIcon,
   },
   {
     title: "Services",
@@ -43,11 +55,20 @@ export function AppSidebar() {
   return (
     <Sidebar className="bg-zinc-900">
       <SidebarHeader>
-        <OrganizationSwitcher />
+        <div className="flex items-center gap-2 px-5">
+          <BadgeCheckIcon color="green" />
+          <h1 className="text-2xl">Stato-gram</h1>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Select Organization</SidebarGroupLabel>
+          <SidebarContent>
+            <OrganizationSwitcher />
+          </SidebarContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Home</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem
@@ -60,6 +81,13 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Services and Incidents</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
               {organizationId &&
                 items?.map((item) => (
                   <SidebarMenuItem

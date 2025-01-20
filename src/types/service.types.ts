@@ -17,3 +17,18 @@ export type serviceType = {
   service_status: string;
   start_date: Date;
 };
+
+export type serviceStatusType =
+  | "Operational"
+  | "Degraded Performance"
+  | "Partial Outage"
+  | "Major Outage"
+  | "Under Maintenance";
+
+export enum ServiceStatusEnum {
+  Operational = "Operational",
+  DegradedPerformance = "Degraded Performance",
+  PartialOutage = "Partial Outage",
+  MajorOutage = "Major Outage",
+  UnderMaintenance = "Under Maintenance",
+}
