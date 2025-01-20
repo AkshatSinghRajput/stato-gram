@@ -6,6 +6,7 @@ import { createIncidentType, IncidentType } from "@/types/incident.types";
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { createActivity } from "../activity/activity.actions";
 
 // Create a new incident
 export async function createIncident({
@@ -135,6 +136,31 @@ export async function updateIncident({
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
+    }
+
+    // Create Activity if status is changed
+    const currentIncident: IncidentType | null = await incidentModel.findOne({
+      incident_id,
+      organization_id,
+    });
+
+    if (!currentIncident) {
+      return { success: false, message: "Incident not found" };
+    }
+
+    if (currentIncident.incident_status !== incidentData.status) {
+      const activity = await createActivity({
+        activity: {
+          action: incidentData.status,
+          actor_id: currentIncident.incident_id,
+          actor_type: "incident",
+          organization_id: organization_id,
+          activity_description: `Incident status changed to ${incidentData.status}`,
+        },
+      });
+      if (!activity.success) {
+        return { success: false, message: "Error creating activity" };
+      }
     }
 
     const updatedIncident = await incidentModel.findOneAndUpdate(

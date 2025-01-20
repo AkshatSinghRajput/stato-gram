@@ -13,6 +13,7 @@ import {
   formatTimeDifference,
 } from "@/helper/time.helpers";
 import { Clock10Icon } from "lucide-react";
+import DeleteMaintenanceModal from "./DeleteMaintenance";
 
 function MaintenanceBadge({ status }: { status: string }) {
   const badgeClass =
@@ -81,6 +82,9 @@ export default function MaintenanceCard({
             Edit
           </Button>
         </Link>
+        <DeleteMaintenanceModal
+          maintenance_id={maintenance.maintenance_id}
+        ></DeleteMaintenanceModal>
         {/* <DeleteIncidentModal
           incident_id={incident.incident_id}
         ></DeleteIncidentModal> */}

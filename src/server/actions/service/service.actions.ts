@@ -10,6 +10,7 @@ import {
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { createActivity } from "../activity/activity.actions";
 
 // Create a new service in the database
 export async function createServiceAction(
@@ -131,6 +132,42 @@ export async function updateServiceAction({
     if (!user) {
       return { success: false, message: "User not authenticated" };
     }
+
+    // Update the activity feed for the organization if the service status has changed
+    const existingService = await serviceModel
+      .findOne({
+        service_id: service_id,
+        organization_id: organization_id,
+      })
+      .lean()
+      .exec();
+
+    if (!existingService) {
+      return { success: false, message: "Service not found" };
+    }
+
+    const existingServiceJson: serviceType = JSON.parse(
+      JSON.stringify(existingService)
+    );
+
+    if (
+      existingService &&
+      existingServiceJson.service_status !== serviceData.status
+    ) {
+      const activity = await createActivity({
+        activity: {
+          organization_id: organization_id,
+          action: serviceData.status,
+          activity_description: `Service status for ${existingServiceJson.service_name} was updated to ${serviceData.status}`,
+          actor_type: "service",
+          actor_id: service_id,
+        },
+      });
+      if (!activity.success) {
+        return { success: false, message: "Error updating activity feed" };
+      }
+    }
+
     // Update service document with new data
     const service = await serviceModel.findOneAndUpdate(
       {
@@ -146,6 +183,7 @@ export async function updateServiceAction({
     if (!service) {
       return { success: false, message: "Error updating service" };
     }
+
     revalidatePath("/dashboard/services"); // Refresh the services page cache
     return { success: true, message: "Service updated successfully" };
   } catch (err) {

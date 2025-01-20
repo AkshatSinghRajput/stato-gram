@@ -15,12 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
-import {
-  createServiceAction,
-  updateServiceAction,
-} from "@/server/actions/service/service.actions";
+import { updateServiceAction } from "@/server/actions/service/service.actions";
 import { useRouter } from "next/navigation";
-import { serviceType } from "@/types/service.types";
+import { ServiceStatusEnum, serviceType } from "@/types/service.types";
 import { useOrganization } from "@clerk/nextjs";
 
 // Define the validation schema
@@ -36,11 +33,11 @@ const serviceSchema = z.object({
   status: z.string().refine(
     (status) => {
       return (
-        status === "Operational" ||
-        status === "Degraded Performance" ||
-        status === "Partial Outage" ||
-        status === "Major Outage" ||
-        status === "Under Maintenance"
+        status === ServiceStatusEnum.Operational ||
+        status === ServiceStatusEnum.DegradedPerformance ||
+        status === ServiceStatusEnum.PartialOutage ||
+        status === ServiceStatusEnum.MajorOutage ||
+        status === ServiceStatusEnum.UnderMaintenance
       );
     },
     { message: "Select a status" }
@@ -152,13 +149,11 @@ export default function EditServiceForm({ service }: { service: serviceType }) {
                 id="status"
                 className="w-full p-2 border active:border-gray-300 rounded-md"
               >
-                <option value="Operational">Operational</option>
-                <option value="Degraded Performance">
-                  Degraded Performance
-                </option>
-                <option value="Partial Outage">Partial Outage</option>
-                <option value="Major Outage">Major Outage</option>
-                <option value="Under Maintenance">Under Maintenance</option>
+                {Object.values(ServiceStatusEnum).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
               {errors.status && (
                 <p className="text-sm text-red-500">{errors.status.message}</p>
