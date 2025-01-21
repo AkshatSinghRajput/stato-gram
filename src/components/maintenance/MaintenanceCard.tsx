@@ -44,7 +44,11 @@ export default function MaintenanceCard({
         <MaintenanceBadge status={maintenance.maintenance_status} />
       </div>
       <div className="flex flex-col gap-2 w-full pb-2">
-        <h2 className="text-lg font-bold">{maintenance?.maintenance_name}</h2>
+        <Link
+          href={`/dashboard/maintenance/details/${maintenance.maintenance_id}`}
+        >
+          <h2 className="text-lg font-bold">{maintenance?.maintenance_name}</h2>
+        </Link>
         <p className="text-sm text-zinc-400">
           {maintenance?.maintenance_description}
         </p>

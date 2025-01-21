@@ -82,10 +82,13 @@ export async function getServicesForOrganization(
 }
 
 // Retrieve a specific service by ID and organization
-export async function getServiceById(
-  service_id: string,
-  organization_id: string
-): Promise<{ success: boolean; message: string; service?: serviceType }> {
+export async function getServiceById({
+  service_id,
+  organization_id,
+}: {
+  service_id: string;
+  organization_id: string;
+}): Promise<{ success: boolean; message: string; service?: serviceType }> {
   try {
     await dbConnect();
     // Find single service matching both service_id and organization_id
@@ -102,7 +105,7 @@ export async function getServiceById(
     if (!service) {
       return { success: false, message: "Error getting service" };
     }
-    const serviceJson = JSON.parse(JSON.stringify(service)); // Ensure serializable data
+    const serviceJson: serviceType = JSON.parse(JSON.stringify(service)); // Ensure serializable data
 
     return {
       success: true,

@@ -4,8 +4,9 @@ import { serviceType } from "@/types/service.types";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { DeleteServiceModal } from "./DeleteService";
+
 import Link from "next/link";
+import DeleteServiceModal from "./DeleteService";
 
 function ServiceBadge({ status }: { status: string }) {
   return (
@@ -30,7 +31,9 @@ export default function ServiceCard(service: serviceType) {
         <ServiceBadge status={service.service_status} />
       </div>
       <div className="flex flex-col gap-2 w-full pb-2">
-        <h2 className="text-lg font-bold">{service.service_name}</h2>
+        <Link href={`/dashboard/services/details/${service?.service_id}`}>
+          <h2 className="text-lg font-bold">{service.service_name}</h2>
+        </Link>
         <p className="text-sm text-zinc-400">{service.service_description}</p>
       </div>
       <div className="flex items-center gap-4">

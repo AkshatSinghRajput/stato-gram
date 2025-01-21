@@ -18,6 +18,16 @@ function IncidentCardGroup({ incidents }: { incidents: IncidentType[] }) {
       {incidents.map((incident) => (
         <IncidentCard key={incident.incident_id} incident={incident} />
       ))}
+      {incidents.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-4">
+          <p className="text-lg font-semibold text-neutral-700">
+            No Incidents Found for this filter
+          </p>
+          <p className="text-sm text-neutral-500">
+            There are no incidents to display
+          </p>
+        </div>
+      )}
     </Card>
   );
 }

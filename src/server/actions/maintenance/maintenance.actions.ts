@@ -41,6 +41,20 @@ export async function createMaintenance({
     if (!newMaintenance) {
       return { success: false, message: "Error creating maintenance" }; // Return error if maintenance creation fails
     }
+    // Create Activity for the maintenance
+    const activity = await createActivity({
+      activity: {
+        action: maintenanceData.maintenance_status, // Set the action to create
+        actor_id: newMaintenance.maintenance_id, // Set the actor ID to the maintenance ID
+        actor_type: "maintenance", // Set the actor type to maintenance
+        organization_id: user?.orgId, // Set the organization ID
+        activity_description: `Maintenance scheduled with status ${maintenanceData.maintenance_status}`, // Set the activity description
+      },
+    });
+    if (!activity.success) {
+      return { success: false, message: "Error creating activity" }; // Return error if activity creation fails
+    }
+
     revalidatePath("/dashboard/incidents/maintenance"); // Revalidate the cache for the maintenance path
     return { success: true, message: "Maintenance created successfully" }; // Return success message
   } catch (error) {

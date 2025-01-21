@@ -28,5 +28,4 @@ const serviceSchema = new Schema({
   },
 });
 
-export type ServiceType = InferSchemaType<typeof serviceSchema>;
 export default models.service || model("service", serviceSchema);

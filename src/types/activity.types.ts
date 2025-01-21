@@ -13,5 +13,5 @@ export type ActivityType = {
   activity_description: string;
   actor_id: string;
   actor_type: string;
-  timestamp: Date;
+  timestamp: string;
 };

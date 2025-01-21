@@ -7,27 +7,6 @@ import Link from "next/link";
 import { Card } from "../ui/card";
 import { serviceType } from "@/types/service.types";
 
-// const services = [
-//   {
-//     id: "1",
-//     title: "Service 1",
-//     status: "Operational",
-//     description: "Service 1 description",
-//   },
-//   {
-//     id: "2",
-//     title: "Service 2",
-//     status: "Major Outage",
-//     description: "Service 2 description",
-//   },
-//   {
-//     id: "3",
-//     title: "Service 3",
-//     status: "Degraded Performance",
-//     description: "Service 3 description",
-//   },
-// ];
-
 export default function ServicesComponent({
   services,
 }: {

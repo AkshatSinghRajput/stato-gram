@@ -17,7 +17,10 @@ export default async function EditServicePage({
     redirect("/dashboard");
   }
   const serviceId = params.id;
-  const serviceDetails = await getServiceById(serviceId, user.orgId);
+  const serviceDetails = await getServiceById({
+    service_id: serviceId,
+    organization_id: user.orgId,
+  });
   if (!serviceDetails.success || !serviceDetails.service) {
     redirect("/dashboard/services");
   }

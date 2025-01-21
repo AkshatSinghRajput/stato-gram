@@ -36,6 +36,20 @@ export async function createIncident({
       return { success: false, message: "Error creating incident" };
     }
 
+    // Create Activity for the incident\
+    const activity = await createActivity({
+      activity: {
+        action: incidentData.status,
+        actor_id: newIncident.incident_id,
+        actor_type: "incident",
+        organization_id: user?.orgId,
+        activity_description: `Incident created with status ${incidentData.status}`,
+      },
+    });
+    if (!activity.success) {
+      return { success: false, message: "Error creating activity" };
+    }
+
     revalidatePath("/dashboard/incidents");
     return {
       success: true,

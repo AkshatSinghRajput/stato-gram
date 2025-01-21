@@ -33,7 +33,9 @@ export default function IncidentCard({ incident }: { incident: IncidentType }) {
         <IncidentBadge status={incident.incident_status} />
       </div>
       <div className="flex flex-col gap-2 w-full pb-2">
-        <h2 className="text-lg font-bold">{incident?.incident_name}</h2>
+        <Link href={`/dashboard/incidents/details/${incident.incident_id}`}>
+          <h2 className="text-lg font-bold">{incident?.incident_name}</h2>
+        </Link>
         <p className="text-sm text-zinc-400">{incident.incident_description}</p>
         <div className="flex flex-col md:flex-row gap-1 items-start">
           <Badge
@@ -43,7 +45,7 @@ export default function IncidentCard({ incident }: { incident: IncidentType }) {
             <Clock10Icon className="h-3 w-3" />
             <span>
               <strong> Created at: </strong>
-              {new Date(incident.created_at).toLocaleDateString()}
+              {new Date(incident.created_at).toLocaleDateString("en-GB")}
             </span>
           </Badge>
         </div>

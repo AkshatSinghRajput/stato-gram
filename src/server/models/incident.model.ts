@@ -32,5 +32,4 @@ const incidentModel = new Schema({
   },
 });
 
-export type ServiceType = InferSchemaType<typeof incidentModel>;
 export default models.incident || model("incident", incidentModel);
