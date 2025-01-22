@@ -1,11 +1,13 @@
-"use server";
+"use server"; // Marks this file as a Server Component in Next.js
 
-import activityModel from "@/server/models/activity.model";
-import dbConnect from "@/server/utils/database";
 import { ActivityType, createActivityType } from "@/types/activity.types";
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 
+// Base URL for the activity API endpoints
+const base_url = "http://localhost:8000/api/v1/activity";
+
+// Function to create a new activity
 export async function createActivity({
   activity,
 }: {
@@ -15,7 +17,7 @@ export async function createActivity({
   message: string;
 }> {
   try {
-    await dbConnect();
+    // Get authenticated user information
     const user = await auth();
     if (!user) {
       return {
@@ -23,11 +25,24 @@ export async function createActivity({
         message: "User not found",
       };
     }
-    const activityCreated = await activityModel.create({
-      activity_id: randomUUID({ disableEntropyCache: true }),
-      ...activity,
+
+    // Make POST request to create activity
+    const response = await fetch(`${base_url}/create-activity`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: user.orgId,
+        sessionId: user.sessionId,
+      },
+      body: JSON.stringify({
+        ...activity,
+        activity_id: randomUUID({ disableEntropyCache: true }), // Generate unique ID for activity
+      }),
     });
-    if (!activityCreated) {
+    const activityCreated = await response.json();
+
+    // Check if activity creation was successful
+    if (!activityCreated?.success) {
       return {
         success: false,
         message: "Activity not created",
@@ -46,6 +61,7 @@ export async function createActivity({
   }
 }
 
+// Function to fetch activities by actor ID and organization ID
 export async function getActivityByActorID({
   actor_id,
   organization_id,
@@ -58,7 +74,7 @@ export async function getActivityByActorID({
   data: any;
 }> {
   try {
-    await dbConnect();
+    // Verify user authentication
     const user = await auth();
     if (!user) {
       return {
@@ -67,17 +83,18 @@ export async function getActivityByActorID({
         data: null,
       };
     }
-    const activity = await activityModel
-      .find(
-        { actor_id, organization_id },
-        {
-          _id: 0,
-          __v: 0,
-        }
-      )
-      .lean()
-      .exec();
-    if (!activity) {
+
+    // Make GET request to fetch activities
+    const response = await fetch(
+      `${base_url}/get-activity/${organization_id}/${actor_id}`,
+      {
+        method: "GET",
+      }
+    );
+    const activity = await response.json();
+
+    // Check if activities were found
+    if (!activity.success || !activity.data) {
       return {
         success: false,
         message: "Activity not found",
@@ -85,16 +102,13 @@ export async function getActivityByActorID({
       };
     }
 
-    const activityJSON: ActivityType[] = JSON.parse(JSON.stringify(activity));
-
     return {
       success: true,
       message: "Activity found",
-      data: activityJSON,
+      data: activity.data as ActivityType[], // Cast the data to ActivityType array
     };
   } catch (err) {
     console.error("Error in getActivitybyActorID", err);
-
     return {
       success: false,
       message: err,

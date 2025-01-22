@@ -1,7 +1,5 @@
 "use server";
 
-import maintenanceModel from "@/server/models/maintenance.model";
-import dbConnect from "@/server/utils/database";
 import {
   createMaintenanceType,
   MaintenanceType,
@@ -9,62 +7,8 @@ import {
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
-import { createActivity } from "../activity/activity.actions";
 
-// Create a new maintenance
-export async function createMaintenance({
-  maintenanceData,
-}: {
-  maintenanceData: createMaintenanceType;
-}): Promise<{
-  success: boolean;
-  message: string;
-}> {
-  try {
-    await dbConnect(); // Connect to the database
-
-    const user = await auth(); // Authenticate the user
-    if (!user) {
-      return { success: false, message: "User not authenticated" }; // Return error if user is not authenticated
-    }
-
-    const newMaintenance = await maintenanceModel.create({
-      maintenance_id: randomUUID({ disableEntropyCache: true }), // Generate a unique ID for the maintenance
-      organization_id: user?.orgId, // Set the organization ID from the authenticated user
-      maintenance_name: maintenanceData.maintenance_name, // Set the maintenance name
-      maintenance_description: maintenanceData.maintenance_description, // Set the maintenance description
-      maintenance_status: maintenanceData.maintenance_status, // Set the maintenance status
-      service_impacted: maintenanceData.services_impacted, // Set the services impacted
-      start_from: maintenanceData.start_from, // Set the start time
-      end_at: maintenanceData.end_at, // Set the end time
-    });
-    if (!newMaintenance) {
-      return { success: false, message: "Error creating maintenance" }; // Return error if maintenance creation fails
-    }
-    // Create Activity for the maintenance
-    const activity = await createActivity({
-      activity: {
-        action: maintenanceData.maintenance_status, // Set the action to create
-        actor_id: newMaintenance.maintenance_id, // Set the actor ID to the maintenance ID
-        actor_type: "maintenance", // Set the actor type to maintenance
-        organization_id: user?.orgId, // Set the organization ID
-        activity_description: `Maintenance scheduled with status ${maintenanceData.maintenance_status}`, // Set the activity description
-      },
-    });
-    if (!activity.success) {
-      return { success: false, message: "Error creating activity" }; // Return error if activity creation fails
-    }
-
-    revalidatePath("/dashboard/incidents/maintenance"); // Revalidate the cache for the maintenance path
-    return { success: true, message: "Maintenance created successfully" }; // Return success message
-  } catch (error) {
-    console.error("Error creating maintenance: ", error); // Log the error
-    return {
-      success: false,
-      message: "Error creating maintenance", // Return error message
-    };
-  }
-}
+const base_url = "http://localhost:8000/api/v1/maintenance";
 
 // Get all maintenance for the organization
 export async function getAllMaintenance({
@@ -77,19 +21,23 @@ export async function getAllMaintenance({
   maintenance?: MaintenanceType[];
 }> {
   try {
-    await dbConnect(); // Connect to the database
-    const maintenance = await maintenanceModel
-      .find({ organization_id }, { _id: 0, __v: 0 }) // Find all maintenance records for the organization
-      .lean()
-      .exec();
-    if (!maintenance) {
-      return { success: false, message: "No maintenance found" }; // Return error if no maintenance found
+    const response = await fetch(
+      `${base_url}/get-all-maintenances/${organization_id}`,
+      {
+        method: "GET",
+      }
+    );
+
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error getting maintenance" }; // Return error if getting maintenance fails
     }
-    const maintenanceJson = JSON.parse(JSON.stringify(maintenance)); // Convert maintenance records to JSON
+
     return {
       success: true,
       message: "Maintenance found", // Return success message
-      maintenance: maintenanceJson, // Return maintenance records
+      maintenance: responseJson.data as MaintenanceType[], // Return maintenance records
     };
   } catch (error) {
     console.error("Error getting maintenance: ", error); // Log the error
@@ -113,25 +61,75 @@ export async function getMaintenanceById({
   maintenance?: MaintenanceType;
 }> {
   try {
-    await dbConnect(); // Connect to the database
-    const maintenance = await maintenanceModel
-      .findOne({ maintenance_id, organization_id }, { _id: 0, __v: 0 }) // Find the maintenance record by ID and organization ID
-      .lean()
-      .exec();
-    if (!maintenance) {
-      return { success: false, message: "No maintenance found" }; // Return error if no maintenance found
+    const response = await fetch(
+      `${base_url}/get-maintenance/${organization_id}/${maintenance_id}`,
+      {
+        method: "GET",
+      }
+    );
+    const maintenanceJson = await response.json();
+    if (!maintenanceJson.success) {
+      return { success: false, message: "Error getting maintenance" }; // Return error if getting maintenance fails
     }
-    const maintenanceJson = JSON.parse(JSON.stringify(maintenance)); // Convert maintenance record to JSON
     return {
       success: true,
       message: "Maintenance found", // Return success message
-      maintenance: maintenanceJson, // Return maintenance record
+      maintenance: maintenanceJson.data as MaintenanceType, // Return maintenance record
     };
   } catch (error) {
     console.error("Error getting maintenance: ", error); // Log the error
     return {
       success: false,
       message: "Error getting maintenance", // Return error message
+    };
+  }
+}
+
+// Create a new maintenance
+export async function createMaintenance({
+  maintenanceData,
+}: {
+  maintenanceData: createMaintenanceType;
+}): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    const user = await auth(); // Authenticate the user
+    if (!user) {
+      return { success: false, message: "User not authenticated" }; // Return error if user is not authenticated
+    }
+    const response = await fetch(`${base_url}/create-maintenance`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: user?.orgId,
+        sessionId: user?.sessionId,
+      },
+      body: JSON.stringify({
+        maintenance_id: randomUUID({ disableEntropyCache: true }),
+        organization_id: user?.orgId,
+        maintenance_name: maintenanceData.maintenance_name,
+        maintenance_description: maintenanceData.maintenance_description,
+        maintenance_status: maintenanceData.maintenance_status,
+        service_impacted: maintenanceData.services_impacted,
+        start_from: maintenanceData.start_from,
+        end_at: maintenanceData.end_at,
+      }),
+    });
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error creating maintenance" }; // Return error if maintenance creation fails
+    }
+
+    revalidatePath("/dashboard/incidents/maintenance"); // Revalidate the cache for the maintenance path
+    return { success: true, message: "Maintenance created successfully" }; // Return success message
+  } catch (error) {
+    console.error("Error creating maintenance: ", error); // Log the error
+    return {
+      success: false,
+      message: "Error creating maintenance", // Return error message
     };
   }
 }
@@ -150,7 +148,7 @@ export async function updateMaintenance({
   message: string;
 }> {
   try {
-    await dbConnect(); // Connect to the database
+    // await dbConnect(); // Connect to the database
     const user = await auth(); // Authenticate the user
     if (!user) {
       return {
@@ -159,62 +157,34 @@ export async function updateMaintenance({
       };
     }
 
-    // Update the Activity Feed for the organization if the maintenance status has changed
-    const existingMaintenance: MaintenanceType = await maintenanceModel.findOne(
-      {
-        maintenance_id: maintenance_id,
-        organization_id: organization_id,
-      }
-    );
-    if (!existingMaintenance) {
-      return {
-        success: false,
-        message: "Maintenance not found.", // Return error if maintenance not found
-      };
-    }
-
-    if (
-      existingMaintenance.maintenance_status !==
-      maintenanceData.maintenance_status
-    ) {
-      // Update the Activity Feed for the organization
-      const activity = await createActivity({
-        activity: {
-          action: maintenanceData.maintenance_status, // Set the action to the maintenance status
-          organization_id: organization_id, // Set the organization ID
-          actor_id: existingMaintenance.maintenance_id,
-          actor_type: "maintenance",
-          activity_description: `Maintenance status for ${existingMaintenance.maintenance_name} was updated to ${maintenanceData.maintenance_status}`, // Set the activity description
-        },
-      });
-      if (!activity.success) {
-        return {
-          success: false,
-          message: "Error updating activity feed.", // Return error if activity update fails
-        };
-      }
-    }
-
-    const update = await maintenanceModel.findOneAndUpdate(
-      {
-        maintenance_id: maintenance_id,
-        organization_id: organization_id,
+    const response = await fetch(`${base_url}/update-maintenance`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: organization_id,
+        sessionId: user?.sessionId,
       },
-      {
-        maintenance_name: maintenanceData.maintenance_name, // Update the maintenance name
-        maintenance_description: maintenanceData.maintenance_description, // Update the maintenance description
-        maintenance_status: maintenanceData.maintenance_status, // Update the maintenance status
-        service_impacted: maintenanceData.services_impacted, // Update the services impacted
-        start_from: maintenanceData.start_from, // Update the start time
-        end_at: maintenanceData.end_at, // Update the end time
-      }
-    );
-    if (!update) {
+      body: JSON.stringify({
+        maintenance_id: maintenance_id,
+        organization_id: organization_id,
+        maintenance_name: maintenanceData.maintenance_name,
+        maintenance_description: maintenanceData.maintenance_description,
+        maintenance_status: maintenanceData.maintenance_status,
+        service_impacted: maintenanceData.services_impacted,
+        start_from: maintenanceData.start_from,
+        end_at: maintenanceData.end_at,
+      }),
+    });
+
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
       return {
         success: false,
-        message: "Update failed.", // Return error if update fails
+        message: "Error updating maintenance", // Return error if update fails
       };
     }
+
     revalidatePath("/dashboard/maintenance"); // Revalidate the cache for the maintenance path
     return {
       success: true,
@@ -241,7 +211,7 @@ export async function deleteMaintenance({
   message: string;
 }> {
   try {
-    await dbConnect(); // Connect to the database
+    // await dbConnect(); // Connect to the database
     const user = await auth(); // Authenticate the user
     if (!user) {
       return {
@@ -250,14 +220,24 @@ export async function deleteMaintenance({
       };
     }
 
-    const deleteMaintenance = await maintenanceModel.findOneAndDelete({
-      maintenance_id: maintenance_id,
-      organization_id: organization_id,
-    });
-    if (!deleteMaintenance) {
+    const response = await fetch(
+      `${base_url}/delete-maintenance/${maintenance_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          organizationId: organization_id,
+          sessionId: user?.sessionId,
+        },
+      }
+    );
+
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
       return {
         success: false,
-        message: "Failed to delete the Maintenance.", // Return error if delete fails
+        message: "Error deleting maintenance", // Return error if delete fails
       };
     }
     revalidatePath("/dashboard/maintenance"); // Revalidate the cache for the maintenance path

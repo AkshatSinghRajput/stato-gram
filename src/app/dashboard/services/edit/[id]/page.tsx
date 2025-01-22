@@ -21,6 +21,7 @@ export default async function EditServicePage({
     service_id: serviceId,
     organization_id: user.orgId,
   });
+
   if (!serviceDetails.success || !serviceDetails.service) {
     redirect("/dashboard/services");
   }

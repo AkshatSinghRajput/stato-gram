@@ -1,7 +1,5 @@
 "use server"; // Marks this file as a server-side module
 
-import serviceModel from "@/server/models/service.model";
-import dbConnect from "@/server/utils/database";
 import {
   createServiceType,
   serviceType,
@@ -12,7 +10,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createActivity } from "../activity/activity.actions";
 
-// Create a new service in the database
+// Function to create a new service in the database
 export async function createServiceAction(
   serviceData: createServiceType
 ): Promise<{ success: boolean; message: string }> {
@@ -23,20 +21,30 @@ export async function createServiceAction(
       return { success: false, message: "User not authenticated" };
     }
 
-    // Connect to the database
-    await dbConnect();
+    const response = await fetch(
+      "http://localhost:8000/api/v1/service/create-service",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          organizationId: user.orgId,
+          sessionId: user.sessionId,
+        },
+        body: JSON.stringify({
+          service_id: randomUUID({ disableEntropyCache: true }),
+          organization_id: user.orgId,
+          service_name: serviceData.name,
+          service_description: serviceData.description,
+        }),
+      }
+    );
 
-    // Create new service document with generated UUID
-    const service = await serviceModel.create({
-      service_id: randomUUID({ disableEntropyCache: true }),
-      organization_id: user?.orgId,
-      service_name: serviceData.name,
-      service_description: serviceData.description,
-    });
+    const service = await response.json();
 
-    if (!service) {
+    if (!service?.success) {
       return { success: false, message: "Error creating service" };
     }
+
     revalidatePath("/dashboard/services"); // Refresh the services page cache
     return { success: true, message: "Service created successfully" };
   } catch (err) {
@@ -45,7 +53,7 @@ export async function createServiceAction(
   }
 }
 
-// Retrieve all services for a specific organization
+// Function to retrieve all services for a specific organization
 export async function getServicesForOrganization(
   organization_id: string
 ): Promise<{
@@ -54,26 +62,23 @@ export async function getServicesForOrganization(
   services?: any;
 }> {
   try {
-    await dbConnect();
-    // Query services excluding MongoDB specific fields (_id and __v)
-    const services = await serviceModel
-      .find(
-        {
-          organization_id: organization_id,
-        },
-        { _id: 0, __v: 0 }
-      )
-      .lean() // Convert to POJO (Plain Old JavaScript Object)
-      .exec();
-    if (!services) {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/service/get-all-services/${organization_id}`,
+      {
+        method: "GET",
+      }
+    );
+
+    const services = await response.json();
+
+    if (!services?.success || !services?.data) {
       return { success: false, message: "Error getting services" };
     }
-    const servicesJson = JSON.parse(JSON.stringify(services)); // Ensure serializable data
 
     return {
       success: true,
       message: "Services retrieved successfully",
-      services: servicesJson,
+      services: JSON.parse(JSON.stringify(services.data)),
     };
   } catch (err) {
     console.error("Error getting services: ", err);
@@ -81,7 +86,7 @@ export async function getServicesForOrganization(
   }
 }
 
-// Retrieve a specific service by ID and organization
+// Function to retrieve a specific service by ID and organization
 export async function getServiceById({
   service_id,
   organization_id,
@@ -90,27 +95,23 @@ export async function getServiceById({
   organization_id: string;
 }): Promise<{ success: boolean; message: string; service?: serviceType }> {
   try {
-    await dbConnect();
-    // Find single service matching both service_id and organization_id
-    const service = await serviceModel
-      .findOne(
-        {
-          service_id: service_id,
-          organization_id: organization_id,
-        },
-        { _id: 0, __v: 0 }
-      )
-      .lean()
-      .exec();
-    if (!service) {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/service/get-service/${organization_id}/${service_id}`,
+      {
+        method: "GET",
+      }
+    );
+
+    const service = await response.json();
+
+    if (!service?.success || !service?.data) {
       return { success: false, message: "Error getting service" };
     }
-    const serviceJson: serviceType = JSON.parse(JSON.stringify(service)); // Ensure serializable data
 
     return {
       success: true,
       message: "Service retrieved successfully",
-      service: serviceJson,
+      service: service.data as serviceType,
     };
   } catch (err) {
     console.error("Error getting service: ", err);
@@ -118,7 +119,7 @@ export async function getServiceById({
   }
 }
 
-// Update service details in the database
+// Function to update service details in the database
 export async function updateServiceAction({
   service_id,
   organization_id,
@@ -129,39 +130,31 @@ export async function updateServiceAction({
   serviceData: updateServiceType;
 }): Promise<{ success: boolean; message: string }> {
   try {
-    await dbConnect();
     // Verify user authentication
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
     }
 
-    // Update the activity feed for the organization if the service status has changed
-    const existingService = await serviceModel
-      .findOne({
-        service_id: service_id,
-        organization_id: organization_id,
-      })
-      .lean()
-      .exec();
+    const existingServiceResponse = await getServiceById({
+      service_id,
+      organization_id,
+    });
 
-    if (!existingService) {
+    if (!existingServiceResponse.success || !existingServiceResponse.service) {
       return { success: false, message: "Service not found" };
     }
 
-    const existingServiceJson: serviceType = JSON.parse(
-      JSON.stringify(existingService)
-    );
-
+    // Update the activity feed for the organization if the service status has changed
     if (
-      existingService &&
-      existingServiceJson.service_status !== serviceData.status
+      existingServiceResponse.service &&
+      existingServiceResponse.service.service_status !== serviceData.status
     ) {
       const activity = await createActivity({
         activity: {
           organization_id: organization_id,
           action: serviceData.status,
-          activity_description: `Service status for ${existingServiceJson.service_name} was updated to ${serviceData.status}`,
+          activity_description: `Service status for ${existingServiceResponse.service.service_name} was updated to ${serviceData.status}`,
           actor_type: "service",
           actor_id: service_id,
         },
@@ -171,19 +164,29 @@ export async function updateServiceAction({
       }
     }
 
-    // Update service document with new data
-    const service = await serviceModel.findOneAndUpdate(
+    const response = await fetch(
+      `http://localhost:8000/api/v1/service/update-service`,
       {
-        service_id: service_id,
-        organization_id: organization_id,
-      },
-      {
-        service_name: serviceData.name,
-        service_description: serviceData.description,
-        service_status: serviceData.status,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          organizationId: user.orgId,
+          sessionId: user.sessionId,
+        },
+        body: JSON.stringify({
+          service_id: service_id,
+          organization_id: organization_id,
+          service_name: serviceData.name,
+          service_description: serviceData.description,
+          service_status: serviceData.status,
+        }),
       }
     );
-    if (!service) {
+
+    const service = await response.json();
+
+    if (!service?.success) {
+      console.error("Error updating service: ");
       return { success: false, message: "Error updating service" };
     }
 
@@ -195,65 +198,32 @@ export async function updateServiceAction({
   }
 }
 
-// Update the status of multiple services at once
-export async function updateServiceStatusAction({
-  services,
-}: {
-  services: { service_id: string; status: string }[];
-}): Promise<{ success: boolean; message: string }> {
-  try {
-    await dbConnect();
-    // Verify user authentication
-    const user = await auth();
-    if (!user) {
-      return { success: false, message: "User not authenticated" };
-    }
-
-    // Create bulk operations array
-    const bulkOperations = services.map((service) => ({
-      updateOne: {
-        filter: {
-          service_id: service.service_id,
-          organization_id: user?.orgId,
-        },
-        update: {
-          service_status: service.status,
-        },
-      },
-    }));
-
-    // Execute bulk update
-    const result = await serviceModel.bulkWrite(bulkOperations);
-
-    if (result.modifiedCount === 0) {
-      return { success: false, message: "No services were updated" };
-    }
-
-    revalidatePath("/dashboard/services");
-    return { success: true, message: "Services updated successfully" };
-  } catch (err) {
-    console.error("Error updating services: ", err);
-    return { success: false, message: "Error updating services" };
-  }
-}
-
-// Delete a service
+// Function to delete a service
 export async function deleteServiceAction(
   service_id: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    await dbConnect();
     // Verify user authentication
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
     }
-    // Remove service document from database
-    const service = await serviceModel.findOneAndDelete({
-      service_id: service_id,
-      organization_id: user?.orgId,
-    });
-    if (!service) {
+
+    const response = await fetch(
+      `http://localhost:8000/api/v1/service/delete-service/${service_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          organizationId: user.orgId,
+          sessionId: user.sessionId,
+        },
+      }
+    );
+
+    const service = await response.json();
+
+    if (!service.success) {
       return { success: false, message: "Error deleting service" };
     }
     revalidatePath("/dashboard/services"); // Refresh the services page cache

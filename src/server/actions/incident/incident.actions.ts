@@ -1,12 +1,11 @@
 "use server";
 
-import incidentModel from "@/server/models/incident.model";
-import dbConnect from "@/server/utils/database";
 import { createIncidentType, IncidentType } from "@/types/incident.types";
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
-import { createActivity } from "../activity/activity.actions";
+
+const baseURL = `http://localhost:8000/api/v1/incident`;
 
 // Create a new incident
 export async function createIncident({
@@ -18,36 +17,33 @@ export async function createIncident({
   message: string;
 }> {
   try {
-    await dbConnect();
+    // await dbConnect();
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
     }
-    const newIncident = await incidentModel.create({
-      incident_id: randomUUID({ disableEntropyCache: true }),
-      organization_id: user?.orgId,
-      incident_name: incidentData.title,
-      incident_description: incidentData.description,
-      incident_status: incidentData.status,
-      service_impacted: incidentData.service_impacted,
-    });
 
-    if (!newIncident) {
-      return { success: false, message: "Error creating incident" };
-    }
-
-    // Create Activity for the incident\
-    const activity = await createActivity({
-      activity: {
-        action: incidentData.status,
-        actor_id: newIncident.incident_id,
-        actor_type: "incident",
-        organization_id: user?.orgId,
-        activity_description: `Incident created with status ${incidentData.status}`,
+    const response = await fetch(`${baseURL}/create-incident`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: user?.orgId,
+        sessionId: user?.sessionId,
       },
+      body: JSON.stringify({
+        incident_id: randomUUID({ disableEntropyCache: true }),
+        organization_id: user?.orgId,
+        incident_name: incidentData.title,
+        incident_description: incidentData.description,
+        incident_status: incidentData.status,
+        service_impacted: incidentData.service_impacted,
+      }),
     });
-    if (!activity.success) {
-      return { success: false, message: "Error creating activity" };
+
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error creating incident" };
     }
 
     revalidatePath("/dashboard/incidents");
@@ -75,20 +71,22 @@ export async function getAllIncidents({
   incidents?: IncidentType[];
 }> {
   try {
-    await dbConnect();
-    const incidents = await incidentModel.find(
-      { organization_id },
-      { _id: 0, __v: 0 }
+    const response = await fetch(
+      `${baseURL}/get-all-incidents/${organization_id}`,
+      {
+        method: "GET",
+      }
     );
-    if (!incidents) {
-      return { success: false, message: "No incidents found" };
-    }
 
-    const incidentJson = JSON.parse(JSON.stringify(incidents));
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error getting incidents" };
+    }
 
     return {
       success: true,
-      incidents: incidentJson,
+      incidents: responseJson.data as IncidentType[],
       message: "Successfully got all the incidents",
     };
   } catch (error) {
@@ -110,20 +108,20 @@ export async function getIncidentById({
   incident?: IncidentType;
 }> {
   try {
-    await dbConnect();
-    const incident = await incidentModel.findOne(
-      { incident_id, organization_id },
-      { _id: 0, __v: 0 }
+    const response = await fetch(
+      `${baseURL}/get-incident/${organization_id}/${incident_id}`,
+      { method: "GET" }
     );
-    if (!incident) {
-      return { success: false, message: "Incident not found" };
-    }
 
-    const incidentJson = JSON.parse(JSON.stringify(incident));
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error getting incident" };
+    }
 
     return {
       success: true,
-      incident: incidentJson,
+      incident: responseJson.data as IncidentType,
       message: "Successfully got the incident",
     };
   } catch (error) {
@@ -146,49 +144,35 @@ export async function updateIncident({
   message: string;
 }> {
   try {
-    await dbConnect();
+    // await dbConnect();
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
     }
 
-    // Create Activity if status is changed
-    const currentIncident: IncidentType | null = await incidentModel.findOne({
-      incident_id,
-      organization_id,
-    });
-
-    if (!currentIncident) {
-      return { success: false, message: "Incident not found" };
-    }
-
-    if (currentIncident.incident_status !== incidentData.status) {
-      const activity = await createActivity({
-        activity: {
-          action: incidentData.status,
-          actor_id: currentIncident.incident_id,
-          actor_type: "incident",
-          organization_id: organization_id,
-          activity_description: `Incident status changed to ${incidentData.status}`,
-        },
-      });
-      if (!activity.success) {
-        return { success: false, message: "Error creating activity" };
-      }
-    }
-
-    const updatedIncident = await incidentModel.findOneAndUpdate(
-      { incident_id, organization_id },
-      {
+    const response = await fetch(`${baseURL}/update-incident`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: user?.orgId,
+        sessionId: user?.sessionId,
+      },
+      body: JSON.stringify({
+        incident_id,
+        organization_id,
         incident_name: incidentData.title,
         incident_description: incidentData.description,
         incident_status: incidentData.status,
         service_impacted: incidentData.service_impacted,
-      }
-    );
-    if (!updatedIncident) {
-      return { success: false, message: "Incident not found" };
+      }),
+    });
+
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error updating incident" };
     }
+
     revalidatePath(`/dashboard/incidents`);
     return {
       success: true,
@@ -212,14 +196,19 @@ export async function deleteIncident({
   message: string;
 }> {
   try {
-    await dbConnect();
-    const deletedIncident = await incidentModel.findOneAndDelete({
-      incident_id,
-      organization_id,
+    const response = await fetch(`${baseURL}/delete-incident/${incident_id}`, {
+      method: "DELETE",
+      headers: {
+        organizationId: organization_id,
+      },
     });
-    if (!deletedIncident) {
-      return { success: false, message: "Incident not found" };
+
+    const responseJson = await response.json();
+
+    if (!responseJson.success) {
+      return { success: false, message: "Error deleting incident" };
     }
+
     revalidatePath(`/dashboard/incidents`);
     return {
       success: true,

@@ -16,21 +16,21 @@ export default async function ServiceDetailsPage({
     redirect("sign-in");
   }
   if (!user?.orgId) {
-    redirect("/dashboard/service");
+    redirect("/dashboard/services");
   }
   const serviceDetails = await getServiceById({
     service_id: params.id,
     organization_id: user.orgId,
   });
   if (!serviceDetails.success || !serviceDetails.service) {
-    redirect("/dashboard/service");
+    redirect("/dashboard/services");
   }
   const activities = await getActivityByActorID({
     actor_id: params.id,
     organization_id: user.orgId,
   });
   if (!activities.success || !activities.data) {
-    redirect("/dashboard/service");
+    redirect("/dashboard/services");
   }
 
   return (
