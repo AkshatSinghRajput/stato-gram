@@ -11,6 +11,7 @@ import { Badge } from "../ui/badge";
 import {
   calculateTimeDifference,
   formatTimeDifference,
+  formatTimestampInDateAndTime,
 } from "@/helper/time.helpers";
 import { Clock10Icon } from "lucide-react";
 import DeleteMaintenanceModal from "./DeleteMaintenance";
@@ -59,8 +60,18 @@ export default function MaintenanceCard({
           >
             <Clock10Icon className="h-3 w-3" />
             <span>
-              <strong> Starts in: </strong>
-              {formatTimeDifference(startDiffDays, startDiffHours)}
+              <strong>Status: </strong>
+              {maintenance.maintenance_status === "Completed"
+                ? `Completed at ${formatTimestampInDateAndTime(
+                    endDate.toISOString()
+                  )}`
+                : now < startDate
+                ? `Starts in ${Math.abs(startDiffDays)} days ${Math.abs(
+                    startDiffHours
+                  )} hours`
+                : `Started ${Math.abs(startDiffDays)} days ${Math.abs(
+                    startDiffHours
+                  )} hours ago`}
             </span>
           </Badge>
           <Badge

@@ -4,6 +4,7 @@ import {
   getPublicPageData,
 } from "@/server/actions/public-page/publicPage.actions";
 import { getServicesForOrganization } from "@/server/actions/service/service.actions";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export default async function PublicStatusPage({
@@ -14,6 +15,7 @@ export default async function PublicStatusPage({
   };
 }) {
   const { slug } = params;
+
   const organization = await getOrganizationDetailsFromSlug({ slug });
   if (!organization.success || !organization.organization) {
     redirect("/404");
@@ -31,11 +33,11 @@ export default async function PublicStatusPage({
     organization.organization.organization_id
   );
 
+  revalidatePath(`/status/${slug}`);
+
   if (!services_data.success || !services_data.services) {
     redirect("/404");
   }
-
-  console.log(organization);
 
   return (
     <PublicStatusComponent

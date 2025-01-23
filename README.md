@@ -1,6 +1,32 @@
+# Stato-graph
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
+
+### Prerequisites
+
+Make sure you have the following installed on your machine:
+
+- Node.js (v14 or later)
+- npm (v6 or later) or yarn (v1.22 or later)
+
+### Environment Variables
+
+Create a `.env` file in the root of your project and add the following environment variables:
+
+```env
+# Backend URL for the activity API endpoints
+BACKEND_URL=http://localhost:8000/api/v1 # or your backend URL
+
+# Clerk API keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<your-clerk-publishable-key>
+SIGNING_SECRET=<your-clerk-signing-secret>
+NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=<your-clerk-sign-in-force-redirect-url>
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=<your-clerk-sign-in-url>
+DATABASE_URL=<your-database-url>
+CLERK_SECRET_KEY=<your-clerk-secret-key>
+```
 
 First, run the development server:
 

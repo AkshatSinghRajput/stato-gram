@@ -8,7 +8,8 @@ import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
-const base_url = "http://localhost:8000/api/v1/maintenance";
+// const base_url = "http://localhost:8000/api/v1/maintenance";
+const base_url = process.env.BACKEND_URL + "/maintenance";
 
 // Get all maintenance for the organization
 export async function getAllMaintenance({
@@ -148,7 +149,6 @@ export async function updateMaintenance({
   message: string;
 }> {
   try {
-    // await dbConnect(); // Connect to the database
     const user = await auth(); // Authenticate the user
     if (!user) {
       return {
@@ -211,7 +211,6 @@ export async function deleteMaintenance({
   message: string;
 }> {
   try {
-    // await dbConnect(); // Connect to the database
     const user = await auth(); // Authenticate the user
     if (!user) {
       return {

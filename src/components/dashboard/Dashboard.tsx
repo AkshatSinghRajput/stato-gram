@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import JoinOrganizationPage from "./PersonalAccount";
 import DashboardComponent from "./DashboardPage";
 
-export default function Dashboard() {
+export default function Dashboard({}) {
   const { organization } = useOrganization();
   const [orgId, setOrgId] = useState(organization?.id);
 

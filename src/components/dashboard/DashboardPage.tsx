@@ -4,7 +4,6 @@ import { useOrganization } from "@clerk/nextjs";
 import { Button } from "../ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -12,7 +11,6 @@ import {
 } from "../ui/card";
 import Link from "next/link";
 import { BadgeAlertIcon, CogIcon, ExternalLinkIcon } from "lucide-react";
-import RecentIncidents from "./RecenttIncidents";
 
 export default function DashboardComponent() {
   const { organization } = useOrganization();
@@ -60,7 +58,7 @@ export default function DashboardComponent() {
           </Button>
         </CardFooter>
       </Card>
-      <RecentIncidents></RecentIncidents>
+      {/* <RecentIncidents></RecentIncidents> */}
     </div>
   );
 }

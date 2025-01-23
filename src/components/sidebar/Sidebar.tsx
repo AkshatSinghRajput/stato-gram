@@ -129,7 +129,10 @@ export function AppSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href={`/status/${organization?.slug}`}>
+                      <Link
+                        href={`/status/${organization?.slug}`}
+                        target="blank"
+                      >
                         <ExternalLink />
                         <span>Public Status Page</span>
                       </Link>

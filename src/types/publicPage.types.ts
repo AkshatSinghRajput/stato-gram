@@ -8,4 +8,5 @@ export type PublicPageDataTypes = {
   incident_type: string;
   activities: ActivityType[];
   created_at: Date;
+  service_impacted: string[];
 };

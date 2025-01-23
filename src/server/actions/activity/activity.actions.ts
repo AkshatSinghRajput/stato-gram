@@ -4,8 +4,8 @@ import { ActivityType, createActivityType } from "@/types/activity.types";
 import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 
-// Base URL for the activity API endpoints
-const base_url = "http://localhost:8000/api/v1/activity";
+// Base URL for the activity API endpoints Ex: http://localhost:8000/api/v1
+const base_url = process.env.BACKEND_URL + "/activity";
 
 // Function to create a new activity
 export async function createActivity({

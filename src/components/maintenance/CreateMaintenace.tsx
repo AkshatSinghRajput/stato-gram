@@ -47,18 +47,8 @@ const maintenanceSchema = z
       },
       { message: "Status is required" }
     ),
-    start_at: z.string().refine(
-      (date) => {
-        return new Date(date) > new Date();
-      },
-      { message: "Start date must be in future" }
-    ),
-    end_at: z.string().refine(
-      (date) => {
-        return new Date(date) > new Date();
-      },
-      { message: "End date must be in future" }
-    ),
+    start_at: z.string(),
+    end_at: z.string(),
   })
   .refine(
     (data) => {

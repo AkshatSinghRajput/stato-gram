@@ -10,6 +10,9 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createActivity } from "../activity/activity.actions";
 
+// Define the base URL for the backend API Ex: http://localhost:8000/api/v1
+const baseURL = process.env.BACKEND_URL;
+
 // Function to create a new service in the database
 export async function createServiceAction(
   serviceData: createServiceType
@@ -21,23 +24,20 @@ export async function createServiceAction(
       return { success: false, message: "User not authenticated" };
     }
 
-    const response = await fetch(
-      "http://localhost:8000/api/v1/service/create-service",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          organizationId: user.orgId,
-          sessionId: user.sessionId,
-        },
-        body: JSON.stringify({
-          service_id: randomUUID({ disableEntropyCache: true }),
-          organization_id: user.orgId,
-          service_name: serviceData.name,
-          service_description: serviceData.description,
-        }),
-      }
-    );
+    const response = await fetch(`${baseURL}/service/create-service`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: user.orgId,
+        sessionId: user.sessionId,
+      },
+      body: JSON.stringify({
+        service_id: randomUUID({ disableEntropyCache: true }),
+        organization_id: user.orgId,
+        service_name: serviceData.name,
+        service_description: serviceData.description,
+      }),
+    });
 
     const service = await response.json();
 
@@ -63,7 +63,7 @@ export async function getServicesForOrganization(
 }> {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/v1/service/get-all-services/${organization_id}`,
+      `${baseURL}/service/get-all-services/${organization_id}`,
       {
         method: "GET",
       }
@@ -96,7 +96,7 @@ export async function getServiceById({
 }): Promise<{ success: boolean; message: string; service?: serviceType }> {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/v1/service/get-service/${organization_id}/${service_id}`,
+      `${baseURL}/service/get-service/${organization_id}/${service_id}`,
       {
         method: "GET",
       }
@@ -164,24 +164,21 @@ export async function updateServiceAction({
       }
     }
 
-    const response = await fetch(
-      `http://localhost:8000/api/v1/service/update-service`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          organizationId: user.orgId,
-          sessionId: user.sessionId,
-        },
-        body: JSON.stringify({
-          service_id: service_id,
-          organization_id: organization_id,
-          service_name: serviceData.name,
-          service_description: serviceData.description,
-          service_status: serviceData.status,
-        }),
-      }
-    );
+    const response = await fetch(`${baseURL}/service/update-service`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        organizationId: user.orgId,
+        sessionId: user.sessionId,
+      },
+      body: JSON.stringify({
+        service_id: service_id,
+        organization_id: organization_id,
+        service_name: serviceData.name,
+        service_description: serviceData.description,
+        service_status: serviceData.status,
+      }),
+    });
 
     const service = await response.json();
 
@@ -210,7 +207,7 @@ export async function deleteServiceAction(
     }
 
     const response = await fetch(
-      `http://localhost:8000/api/v1/service/delete-service/${service_id}`,
+      `${baseURL}/service/delete-service/${service_id}`,
       {
         method: "DELETE",
         headers: {

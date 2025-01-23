@@ -5,7 +5,9 @@ import { auth } from "@clerk/nextjs/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
-const baseURL = `http://localhost:8000/api/v1/incident`;
+// const baseURL = `http://localhost:8000/api/v1/incident`;
+
+const baseURL = process.env.BACKEND_URL + "/incident";
 
 // Create a new incident
 export async function createIncident({
@@ -17,7 +19,6 @@ export async function createIncident({
   message: string;
 }> {
   try {
-    // await dbConnect();
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
@@ -144,7 +145,6 @@ export async function updateIncident({
   message: string;
 }> {
   try {
-    // await dbConnect();
     const user = await auth();
     if (!user) {
       return { success: false, message: "User not authenticated" };
@@ -196,10 +196,17 @@ export async function deleteIncident({
   message: string;
 }> {
   try {
+    const user = await auth();
+    if (!user) {
+      return { success: false, message: "User not authenticated" };
+    }
+
     const response = await fetch(`${baseURL}/delete-incident/${incident_id}`, {
       method: "DELETE",
       headers: {
+        "Content-Type": "application/json",
         organizationId: organization_id,
+        sessionId: user?.sessionId,
       },
     });
 
