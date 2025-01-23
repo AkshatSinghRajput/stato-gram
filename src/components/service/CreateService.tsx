@@ -17,6 +17,7 @@ import Link from "next/link";
 import { toast } from "@/hooks/use-toast";
 import { createServiceAction } from "@/server/actions/service/service.actions";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Define the validation schema
 const serviceSchema = z.object({
@@ -44,7 +45,10 @@ export default function CreateServiceForm() {
 
   const router = useRouter();
 
+  const [loading, setLoading] = useState(false);
+
   const onSubmit = async (data: ServiceFormData) => {
+    setLoading(true);
     try {
       const response = await createServiceAction({
         name: data.name,
@@ -69,6 +73,8 @@ export default function CreateServiceForm() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,7 +124,13 @@ export default function CreateServiceForm() {
                     Back to Services
                   </Button>
                 </Link>
-                <Button type="submit">Create Service</Button>
+                {loading ? (
+                  <Button type="button" disabled>
+                    Loading...
+                  </Button>
+                ) : (
+                  <Button type="submit">Create Service</Button>
+                )}
               </div>
             </div>
           </form>

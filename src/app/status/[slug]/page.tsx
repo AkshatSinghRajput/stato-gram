@@ -20,22 +20,19 @@ export default async function PublicStatusPage({
   if (!organization.success || !organization.organization) {
     redirect("/404");
   }
+  const services_data = await getServicesForOrganization(
+    organization.organization.organization_id
+  );
+
+  if (!services_data.success || !services_data.services) {
+    redirect("/404");
+  }
 
   const public_page_data = await getPublicPageData({
     organization_id: organization.organization.organization_id,
   });
 
   if (!public_page_data.success || !public_page_data.data) {
-    redirect("/404");
-  }
-
-  const services_data = await getServicesForOrganization(
-    organization.organization.organization_id
-  );
-
-  revalidatePath(`/status/${slug}`);
-
-  if (!services_data.success || !services_data.services) {
     redirect("/404");
   }
 

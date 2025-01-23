@@ -72,7 +72,10 @@ export default function CreateIncidentForm({
 
   const router = useRouter();
 
+  const [loading, setLoading] = useState(false);
+
   const onSubmit = async (data: IncidentFormData) => {
+    setLoading(true);
     try {
       if (!incidentData) {
         // Update the incident
@@ -129,6 +132,8 @@ export default function CreateIncidentForm({
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -224,9 +229,15 @@ export default function CreateIncidentForm({
                     Back to Incident
                   </Button>
                 </Link>
-                <Button type="submit">
-                  {incidentData ? "Update Incident" : "Create Incident"}
-                </Button>
+                {loading ? (
+                  <Button type="button" disabled>
+                    Loading...
+                  </Button>
+                ) : (
+                  <Button type="submit">
+                    {incidentData ? "Update Incident" : "Create Incident"}
+                  </Button>
+                )}
               </div>
             </div>
           </form>

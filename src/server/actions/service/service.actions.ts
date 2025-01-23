@@ -36,6 +36,7 @@ export async function createServiceAction(
         organization_id: user.orgId,
         service_name: serviceData.name,
         service_description: serviceData.description,
+        start_date: Date.now(),
       }),
     });
 

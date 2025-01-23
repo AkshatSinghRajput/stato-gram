@@ -19,6 +19,7 @@ import { updateServiceAction } from "@/server/actions/service/service.actions";
 import { useRouter } from "next/navigation";
 import { ServiceStatusEnum, serviceType } from "@/types/service.types";
 import { useOrganization } from "@clerk/nextjs";
+import { useState } from "react";
 
 // Define the validation schema
 const serviceSchema = z.object({
@@ -61,11 +62,14 @@ export default function EditServiceForm({ service }: { service: serviceType }) {
     },
   });
 
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
   const { organization } = useOrganization();
 
   const onSubmit = async (data: ServiceFormData) => {
+    setLoading(true);
     try {
       const response = await updateServiceAction({
         organization_id: organization?.id,
@@ -95,6 +99,8 @@ export default function EditServiceForm({ service }: { service: serviceType }) {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,7 +171,13 @@ export default function EditServiceForm({ service }: { service: serviceType }) {
                   Back to Services
                 </Button>
               </Link>
-              <Button type="submit">Update Service</Button>
+              {loading ? (
+                <Button type="button" disabled>
+                  Loading...
+                </Button>
+              ) : (
+                <Button type="submit">Update Service</Button>
+              )}
             </div>
           </form>
         </CardContent>
