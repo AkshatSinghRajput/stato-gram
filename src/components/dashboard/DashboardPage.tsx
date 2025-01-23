@@ -51,7 +51,11 @@ export default function DashboardComponent() {
             asChild
             className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white border-0"
           >
-            <Link href="/status" target="blank" className="items-center flex">
+            <Link
+              href={`/status/${organization?.slug}`}
+              target="blank"
+              className="items-center flex"
+            >
               <ExternalLinkIcon className="w-6 h-6 " />
               Public Page
             </Link>
