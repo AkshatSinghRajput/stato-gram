@@ -137,34 +137,6 @@ export async function updateServiceAction({
       return { success: false, message: "User not authenticated" };
     }
 
-    const existingServiceResponse = await getServiceById({
-      service_id,
-      organization_id,
-    });
-
-    if (!existingServiceResponse.success || !existingServiceResponse.service) {
-      return { success: false, message: "Service not found" };
-    }
-
-    // Update the activity feed for the organization if the service status has changed
-    if (
-      existingServiceResponse.service &&
-      existingServiceResponse.service.service_status !== serviceData.status
-    ) {
-      const activity = await createActivity({
-        activity: {
-          organization_id: organization_id,
-          action: serviceData.status,
-          activity_description: `Service status for ${existingServiceResponse.service.service_name} was updated to ${serviceData.status}`,
-          actor_type: "service",
-          actor_id: service_id,
-        },
-      });
-      if (!activity.success) {
-        return { success: false, message: "Error updating activity feed" };
-      }
-    }
-
     const response = await fetch(`${baseURL}/service/update-service`, {
       method: "POST",
       headers: {

@@ -40,7 +40,8 @@ export default async function PublicStatusPage({
     <PublicStatusComponent
       incident_data={public_page_data.data}
       services_data={services_data.services}
-      organization={organization.organization.organization_name}
+      organization_name={organization.organization.organization_name}
+      organization_id={organization.organization.organization_id}
     />
   );
 }

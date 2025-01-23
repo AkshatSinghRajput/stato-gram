@@ -6,15 +6,18 @@ import { Card } from "../ui/card";
 import PublicServiceCard from "./publicServiceCard";
 import { Separator } from "../ui/separator";
 import RecentIncidents from "./recentIncidents";
+import { useEffect, useState } from "react";
 
 export default function PublicStatusComponent({
   incident_data,
   services_data,
-  organization,
+  organization_name,
+  organization_id,
 }: {
   incident_data: PublicPageDataTypes[];
   services_data: serviceType[];
-  organization: string;
+  organization_name: string;
+  organization_id: string;
 }) {
   const groupedActivities = incident_data.reduce((groups, incident) => {
     const date = new Date(incident.created_at).toDateString();
@@ -25,11 +28,49 @@ export default function PublicStatusComponent({
     return groups;
   }, {} as Record<string, typeof incident_data>);
 
+  const [updateSocket, setUpdateSocket] = useState<WebSocket | null>(null);
+
+  function handleSocket() {
+    if (!updateSocket || updateSocket.readyState === WebSocket.CLOSED) {
+      const socket = new WebSocket(
+        "wss://plivo-backend-production.up.railway.app/api/v1/public-page/update?organization_id=" +
+          organization_id
+      );
+      socket.onopen = () => {
+        console.log("socket connected");
+        socket.send(JSON.stringify({ organization_id }));
+      };
+      socket.onmessage = (event) => {
+        const data = event.data;
+        if (data === "update" && typeof window !== "undefined") {
+          window.location.reload();
+        }
+      };
+      socket.onerror = () => {
+        socket.close();
+        setUpdateSocket(null);
+      };
+      setUpdateSocket(socket);
+    }
+  }
+
+  useEffect(() => {
+    handleSocket();
+    const interval = setInterval(handleSocket, 5000);
+    return () => {
+      clearInterval(interval);
+      if (updateSocket) {
+        updateSocket.close();
+        setUpdateSocket(null);
+      }
+    };
+  }, [updateSocket, organization_id]);
+
   return (
     <div className="h-screen flex flex-col px-4 sm:px-10 mt-4 w-full pb-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
         <h1 className="text-xl sm:text-4xl font-bold capitalize">
-          {organization} Status Page
+          {organization_name} Status Page
         </h1>
       </div>
 
