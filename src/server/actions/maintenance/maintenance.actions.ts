@@ -26,6 +26,7 @@ export async function getAllMaintenance({
       `${base_url}/get-all-maintenances/${organization_id}`,
       {
         method: "GET",
+        cache: "no-cache",
       }
     );
 
@@ -66,6 +67,7 @@ export async function getMaintenanceById({
       `${base_url}/get-maintenance/${organization_id}/${maintenance_id}`,
       {
         method: "GET",
+        cache: "no-cache",
       }
     );
     const maintenanceJson = await response.json();

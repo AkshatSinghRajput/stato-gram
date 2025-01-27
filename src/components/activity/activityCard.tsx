@@ -27,7 +27,7 @@ export default function ActivityCard({
           >
             <Clock10Icon className="h-3 w-3" />
 
-            {formatTimestampInDateAndTime(activityData.timestamp) + " PST"}
+            {formatTimestampInDateAndTime(activityData.timestamp) + " UTC"}
           </Badge>
         </div>
       </div>

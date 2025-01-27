@@ -76,6 +76,7 @@ export async function getAllIncidents({
       `${baseURL}/get-all-incidents/${organization_id}`,
       {
         method: "GET",
+        cache: "no-cache",
       }
     );
 
@@ -111,7 +112,7 @@ export async function getIncidentById({
   try {
     const response = await fetch(
       `${baseURL}/get-incident/${organization_id}/${incident_id}`,
-      { method: "GET" }
+      { method: "GET", cache: "no-cache" }
     );
 
     const responseJson = await response.json();

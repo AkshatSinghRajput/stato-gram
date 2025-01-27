@@ -67,6 +67,7 @@ export async function getServicesForOrganization(
       `${baseURL}/service/get-all-services/${organization_id}`,
       {
         method: "GET",
+        cache: "no-cache",
       }
     );
 

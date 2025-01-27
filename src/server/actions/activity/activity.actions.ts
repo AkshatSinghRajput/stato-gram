@@ -89,6 +89,7 @@ export async function getActivityByActorID({
       `${base_url}/get-activity/${organization_id}/${actor_id}`,
       {
         method: "GET",
+        cache: "no-cache",
       }
     );
     const activity = await response.json();
